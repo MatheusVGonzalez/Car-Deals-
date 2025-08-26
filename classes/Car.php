@@ -7,7 +7,6 @@ class Car {
     public function __construct($conn) {
         $this->conn = $conn;
     }
-
     public function create($data) {
         try {
             $stmt = $this->conn->prepare("INSERT INTO cars (brand, model, year, price, mileage, description, image, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
@@ -28,14 +27,7 @@ class Car {
 
             if($stmt->execute()) {
                 $id = $this->conn->insert_id;
-                \CarDeals\Audit::log(
-                    $this->conn, 
-                    $data['created_by'],
-                    'create',
-                    'cars',
-                    $id,
-                    "Created car {$data['brand']} {$data['model']}"
-                );
+                \CarDeals\Audit::log($this->conn, $data['created_by'], 'create', 'cars', $id, "Created car {$data['brand']} {$data['model']}");
                 return $id;
             }
             return false;
@@ -57,12 +49,7 @@ class Car {
     }
 
     public function update($id, $data) {
-        $stmt = $this->conn->prepare("
-            UPDATE cars 
-            SET brand=?, model=?, year=?, price=?, mileage=?, description=?, status=? 
-            WHERE id=?
-        ");
-        
+        $stmt = $this->conn->prepare("UPDATE cars SET brand=?, model=?, year=?, price=?, mileage=?, description=?, status=? WHERE id=?");
         $stmt->bind_param("ssiidssi",
             $data['brand'],
             $data['model'],

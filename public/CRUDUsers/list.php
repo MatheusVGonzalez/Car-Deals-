@@ -11,21 +11,17 @@ if (!isset($_SESSION['user_id'])) {
 $db = new Database();
 $conn = $db->conn;
 $userManager = new \CarDeals\User($conn);
-
-// Get current user data
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 
-// Only admin can view user list
 if ($user['role'] !== 'admin') {
     header('Location: ../dashboard.php');
     exit;
 }
 
-// Get all users
 $users = $userManager->getAll();
 ?>
 

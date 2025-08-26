@@ -4,28 +4,21 @@ namespace CarDeals;
 class User {
     private $conn;
     private $table = 'users';
-    
     public function __construct($conn) {
         $this->conn = $conn;
     }
 
     public function create($data) {
         try {
-            // Check if email already exists
-            $stmt = $this->conn->prepare("SELECT id FROM {$this->table} WHERE email = ?");
+            $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->bind_param("s", $data['email']);
             $stmt->execute();
             if($stmt->get_result()->num_rows > 0) {
                 throw new \Exception("Email already exists");
             }
-
-            // Hash password
             $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
             
-            $stmt = $this->conn->prepare("
-                INSERT INTO {$this->table} (name, email, password, role, created_at) 
-                VALUES (?, ?, ?, ?, NOW())
-            ");
+            $stmt = $this->conn->prepare("INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())");
             
             $stmt->bind_param("ssss", 
                 $data['name'],
@@ -55,7 +48,7 @@ class User {
 
     public function authenticate($email, $password) {
         try {
-            $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE email = ?");
+            $stmt = $this->conn->prepare("SELECT * FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -75,7 +68,7 @@ class User {
 
     public function getAll() {
         try {
-            return $this->conn->query("SELECT id, name, email, role, created_at FROM {$this->table} ORDER BY created_at DESC");
+            return $this->conn->query("SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC");
         } catch (\Exception $e) {
             error_log("Error getting users: " . $e->getMessage());
             throw new \Exception("Error retrieving users list");
@@ -84,7 +77,7 @@ class User {
 
     public function getById($id) {
         try {
-            $stmt = $this->conn->prepare("SELECT id, name, email, role FROM {$this->table} WHERE id = ?");
+            $stmt = $this->conn->prepare("SELECT id, name, email, role FROM users WHERE id = ?");
             $stmt->bind_param("i", $id);
             $stmt->execute();
             return $stmt->get_result()->fetch_assoc();
@@ -127,7 +120,7 @@ class User {
             $values[] = $id;
             $types .= "i";
 
-            $sql = "UPDATE {$this->table} SET " . implode(", ", $updates) . " WHERE id = ?";
+            $sql = "UPDATE users SET " . implode(", ", $updates) . " WHERE id = ?";
             $stmt = $this->conn->prepare($sql);
             $stmt->bind_param($types, ...$values);
             
@@ -149,50 +142,16 @@ class User {
         }
     }
 
-    public function delete($id, $adminId) {
-        try {
-            $checkStmt = $this->conn->prepare("SELECT id, name FROM {$this->table} WHERE id = ?");
-            $checkStmt->bind_param("i", $id);
-            $checkStmt->execute();
-            $result = $checkStmt->get_result();
-            
-            if($result->num_rows === 0) {
-                throw new \Exception("User not found");
-            }
-
-            $this->conn->begin_transaction();
-
-            try {
-                $deleteStmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE id = ?");
-                $deleteStmt->bind_param("i", $id);
-                
-                if(!$deleteStmt->execute()) {
-                    throw new \Exception("Failed to delete user: " . $deleteStmt->error);
-                }
-                
-                \CarDeals\Audit::log(
-                    $this->conn,
-                    $adminId,
-                    'delete',
-                    'users',
-                    $id,
-                    "User deleted successfully"
-                );
-
-                // Commit transaction
-                $this->conn->commit();
-                return true;
-
-            } catch (\Exception $e) {
-                // Rollback transaction on error
-                $this->conn->rollback();
-                throw $e;
-            }
-
-        } catch (\Exception $e) {
-            error_log("Error in User::delete(): " . $e->getMessage());
-            throw new \Exception("Error deleting user", 0, $e);
+   public function delete($id, $userId) {
+        $user = $this->getById($id);
+        $stmt = $this->conn->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        
+        if($stmt->execute()) {
+            Audit::log($this->conn, $userId, 'delete', 'users', $id, "Deleted user {$user['name']} {$user['email']}");
+            return true;
         }
+        return false;
     }
 }
 ?>

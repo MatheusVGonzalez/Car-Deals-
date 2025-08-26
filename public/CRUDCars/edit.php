@@ -14,7 +14,6 @@ $conn = $db->conn;
 $car = new \CarDeals\Car($conn);
 $message = '';
 
-// Get car data
 if(isset($_GET['id'])) {
     $carData = $car->getById($_GET['id']);
     if(!$carData) {
@@ -25,9 +24,8 @@ if(isset($_GET['id'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $imageFileName = $carData['image']; // Keep existing image by default
+        $imageFileName = $carData['image'];
 
-        // Handle new image upload if provided
         if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
             $targetDir = "../uploads/";
             $imageFileName = time() . '_' . basename($_FILES["image"]["name"]);

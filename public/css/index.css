@@ -18,9 +18,7 @@ main {
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-h1 { color: #111827; }
-p { color: #374151; }
+}   
 a.button {
     display: inline-block;
     margin: 10px;
@@ -32,7 +30,6 @@ a.button {
 }
 a.button:hover { background: #1d4ed8; }
 
-/* Table styles */
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -54,7 +51,6 @@ a.button:hover { background: #1d4ed8; }
     font-weight: bold;
 }
 
-/* Form styles */
 .form {
     background: white;
     padding: 20px;

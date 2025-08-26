@@ -12,7 +12,6 @@ if (!isset($_SESSION['user_id'])) {
 $db = new Database();
 $conn = $db->conn;
 
-// Check if user is admin
 $stmt = $conn->prepare("SELECT role FROM users WHERE id = ?");
 $stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
@@ -27,7 +26,6 @@ $user = new \CarDeals\User($conn);
 
 if(isset($_GET['id'])) {
     try {
-        // Prevent self-deletion
         if($_GET['id'] == $_SESSION['user_id']) {
             $_SESSION['error'] = "You cannot delete your own account";
             header("Location: list.php");
