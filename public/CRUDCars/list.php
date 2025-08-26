@@ -83,8 +83,10 @@ $cars = $car->getAll();
                                     <a href="edit.php?id=<?= $car['id'] ?>" class="button button-small">Edit</a>
                                     <a href="delete.php?id=<?= $car['id'] ?>" class="button button-small button-danger" onclick="return confirm('Are you sure?')">Delete</a>
                                 <?php endif; ?>
-                                <a href="buy.php?id=<?= $car['id'] ?>" class="button button-small">Buy</a>
-                            </td>
+                                <?php if($car['status'] != 'Sold'): ?>
+                                    <a href="buy.php?id=<?= $car['id'] ?>" class="button button-small">Buy</a>
+                                <?php endif; ?>
+                                </td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>
