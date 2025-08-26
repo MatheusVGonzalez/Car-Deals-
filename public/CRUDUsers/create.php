@@ -1,53 +1,107 @@
 <?php
 session_start();
-include '../classes/Database.php';
+include '../../classes/Database.php';
+include '../../classes/User.php';
+include '../../classes/Audit.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../login.php');
+    exit;
+}
+
 $db = new Database();
 $conn = $db->conn;
-if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $name = htmlspecialchars($_POST['name']);
-    $email = htmlspecialchars($_POST['email']);
-    $password = htmlspecialchars($_POST['password']);
-    $role = htmlspecialchars($_POST['role']);
+$user = new \CarDeals\User($conn);
 
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+$stmt = $conn->prepare("SELECT role FROM users WHERE id = ?");
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+$currentUser = $stmt->get_result()->fetch_assoc();
 
-    $result = $conn->query("SELECT id FROM users WHERE email='$email'");
-    if($result->num_rows > 0){
-        $error = "Email already exist";
-    }else{
-        $conn->query("INSERT INTO users (name, email, password, role) VALUES ('$name', '$email', '$hashedPassword', '$role')");
+if ($currentUser['role'] !== 'admin') {
+    header('Location: ../dashboard.php');
+    exit;
+}
 
-        $_SESSION['sucess'] = "user registred";
-        header("Location: login.php");
-        exit;
+$error = '';
+
+if($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        $userData = [
+            'name' => htmlspecialchars($_POST['name']),
+            'email' => htmlspecialchars($_POST['email']),
+            'password' => $_POST['password'],
+            'role' => htmlspecialchars($_POST['role'])
+        ];
+
+        if($user->create($userData)) {
+            header("Location: list.php");
+            exit;
+        }
+    } catch (Exception $e) {
+        $error = $e->getMessage();
     }
 }
 ?>
+
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
-    <link rel="stylesheet" type="text/css" href="css/register.css">
+    <title>Create User - CarDeals CMS</title>
+    <link rel="stylesheet" href="../css/index.css">
 </head>
 <body>
-<div class="register-box">
-    <h2>Register</h2>
-    <?php if(isset($error)) echo "<p style='color:red'>$error</p>"; ?>
-    <form method="POST">
-        <input type="text" name="name" placeholder="Name" required><br>
-        <input type="email" name="email" placeholder="Email" required><br>
-        <input type="password" name="password" placeholder="Password" required><br>
-        <select name="role">
-            <option value="viewer">Viewer</option>
-            <option value="editor">Editor</option>
-            <option value="admin">Admin</option>
-        </select><br>
-        <button type="submit">Register</button>
-    </form>
-    <div class="link">
-        <p>Already had a account?<a href="login.php">Login</a></p>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <h2>CarDeals CMS</h2>
+            <nav>
+                <a href="../dashboard.php" class="nav-link">Dashboard</a>
+                <a href="../CRUDCars/list.php" class="nav-link">Manage Cars</a>
+                <a href="list.php" class="nav-link">Manage Users</a>
+                <hr>
+                <a href="../logout.php" class="nav-link">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <h2>Create New User</h2>
+            
+            <?php if ($error): ?>
+                <p class="alert alert-danger"><?php echo $error; ?></p>
+            <?php endif; ?>
+
+            <form method="POST" class="form">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role:</label>
+                    <select name="role" id="role" required>
+                        <option value="viewer">Viewer</option>
+                        <option value="editor">Editor</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="button button-success">Create User</button>
+                    <a href="list.php" class="button">Cancel</a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 </body>
 </html>

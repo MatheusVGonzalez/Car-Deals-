@@ -151,29 +151,47 @@ class User {
 
     public function delete($id, $adminId) {
         try {
-            $user = $this->getById($id);
-            if(!$user) {
+            $checkStmt = $this->conn->prepare("SELECT id, name FROM {$this->table} WHERE id = ?");
+            $checkStmt->bind_param("i", $id);
+            $checkStmt->execute();
+            $result = $checkStmt->get_result();
+            
+            if($result->num_rows === 0) {
                 throw new \Exception("User not found");
             }
 
-            $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            
-            if($stmt->execute()) {
+            $this->conn->begin_transaction();
+
+            try {
+                $deleteStmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE id = ?");
+                $deleteStmt->bind_param("i", $id);
+                
+                if(!$deleteStmt->execute()) {
+                    throw new \Exception("Failed to delete user: " . $deleteStmt->error);
+                }
+                
                 \CarDeals\Audit::log(
-                    $this->conn, 
-                    $adminId, 
-                    'delete', 
-                    'users', 
-                    $id, 
-                    "Deleted user {$user['name']}"
+                    $this->conn,
+                    $adminId,
+                    'delete',
+                    'users',
+                    $id,
+                    "User deleted successfully"
                 );
+
+                // Commit transaction
+                $this->conn->commit();
                 return true;
+
+            } catch (\Exception $e) {
+                // Rollback transaction on error
+                $this->conn->rollback();
+                throw $e;
             }
-            return false;
+
         } catch (\Exception $e) {
-            error_log("Error deleting user: " . $e->getMessage());
-            throw new \Exception("Error deleting user");
+            error_log("Error in User::delete(): " . $e->getMessage());
+            throw new \Exception("Error deleting user", 0, $e);
         }
     }
 }

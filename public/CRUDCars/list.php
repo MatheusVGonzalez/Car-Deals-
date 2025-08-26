@@ -12,14 +12,12 @@ $db = new Database();
 $conn = $db->conn;
 $car = new \CarDeals\Car($conn);
 
-// Get user data using session ID
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 
-// Get all cars
 $cars = $car->getAll();
 ?>
 
@@ -37,6 +35,9 @@ $cars = $car->getAll();
             <nav>
                 <a href="../dashboard.php" class="nav-link">Dashboard</a>
                 <a href="list.php" class="nav-link">Manage Cars</a>
+                <?php if($user['role'] === 'admin'): ?>
+                <a href="../CRUDUsers/list.php" class="nav-link">Manage Users</a>
+                <?php endif; ?>
                 <hr>
                 <a href="../logout.php" class="nav-link">Logout</a>
             </nav>
@@ -81,9 +82,8 @@ $cars = $car->getAll();
                                 <?php if($user['role'] === 'admin'): ?>
                                     <a href="edit.php?id=<?= $car['id'] ?>" class="button button-small">Edit</a>
                                     <a href="delete.php?id=<?= $car['id'] ?>" class="button button-small button-danger" onclick="return confirm('Are you sure?')">Delete</a>
-                                <?php elseif($user['role'] === 'viewer'): ?>
-                                    <a href="buy.php?id=<?= $car['id'] ?>" class="button button-small">Buy</a>
                                 <?php endif; ?>
+                                <a href="buy.php?id=<?= $car['id'] ?>" class="button button-small">Buy</a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
