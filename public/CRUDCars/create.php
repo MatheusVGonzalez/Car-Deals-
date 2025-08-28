@@ -32,27 +32,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        $carData = [
-            'brand' => htmlspecialchars($_POST['brand']),
-            'model' => htmlspecialchars($_POST['model']),
-            'year' => (int)$_POST['year'],
-            'price' => (float)$_POST['price'],
-            'mileage' => (int)$_POST['mileage'],
-            'description' => htmlspecialchars($_POST['description']),
-            'image' => $imageFileName,
-            'status' => $_POST['status'],
-            'created_by' => $_SESSION['user_id']
-        ];
+        $carData = ['brand' => htmlspecialchars($_POST['brand']), 'model' => htmlspecialchars($_POST['model']), 'year' => (int)$_POST['year'], 'price' => (float)$_POST['price'], 'mileage' => (int)$_POST['mileage'], 'description' => htmlspecialchars($_POST['description']), 'image' => $imageFileName, 'status' => $_POST['status'], 'created_by' => $_SESSION['user_id']];
 
         if ($car->create($carData)) {
             header("Location: list.php");
             exit;
         } else {
-            throw new Exception("Error creating car record.");
+            throw new Exception("error creating car record.");
         }
 
     } catch (Exception $e) {
-        $message = "Error: " . $e->getMessage();
+        $message = "error: " . $e->getMessage();
     }
 }
 ?>

@@ -11,10 +11,10 @@ if (!isset($_SESSION['user_id'])) {
 
 $db = new Database();
 $conn = $db->conn;
-$stmt = $conn->prepare("SELECT role FROM users WHERE id = ?");
-$stmt->bind_param("i", $_SESSION['user_id']);
-$stmt->execute();
-$currentUser = $stmt->get_result()->fetch_assoc();
+$state = $conn->prepare("SELECT role FROM users WHERE id = ?");
+$state->bind_param("i", $_SESSION['user_id']);
+$state->execute();
+$currentUser = $state->get_result()->fetch_assoc();
 
 if ($currentUser['role'] !== 'admin') {
     header('Location: ../dashboard.php');

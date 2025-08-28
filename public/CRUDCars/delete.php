@@ -16,7 +16,6 @@ $car = new \CarDeals\Car($conn);
 if(isset($_GET['id'])) {
     try {
         $carData = $car->getById($_GET['id']);
-        
         if($carData) {
             if($car->delete($_GET['id'], $_SESSION['user_id'])) {
                 if($carData['image']) {
@@ -30,7 +29,7 @@ if(isset($_GET['id'])) {
             }
         }
     } catch (Exception $e) {
-        $_SESSION['error'] = "Error deleting car: " . $e->getMessage();
+        $_SESSION['error'] = "error deleting car: " . $e->getMessage();
     }
 }
 

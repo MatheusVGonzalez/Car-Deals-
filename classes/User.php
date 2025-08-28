@@ -10,24 +10,24 @@ class User {
 
     public function create($data) {
         try {
-            $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->bind_param("s", $data['email']);
-            $stmt->execute();
-            if($stmt->get_result()->num_rows > 0) {
+            $state = $this->conn->prepare("SELECT id FROM users WHERE email = ?");
+            $state->bind_param("s", $data['email']);
+            $state->execute();
+            if($state->get_result()->num_rows > 0) {
                 throw new \Exception("Email already exists");
             }
             $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
             
-            $stmt = $this->conn->prepare("INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())");
+            $state = $this->conn->prepare("INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())");
             
-            $stmt->bind_param("ssss", 
+            $state->bind_param("ssss", 
                 $data['name'],
                 $data['email'],
                 $hashedPassword,
                 $data['role']
             );
 
-            if($stmt->execute()) {
+            if($state->execute()) {
                 $id = $this->conn->insert_id;
                 \CarDeals\Audit::log(
                     $this->conn, 
@@ -48,10 +48,10 @@ class User {
 
     public function authenticate($email, $password) {
         try {
-            $stmt = $this->conn->prepare("SELECT * FROM users WHERE email = ?");
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            $state = $this->conn->prepare("SELECT * FROM users WHERE email = ?");
+            $state->bind_param("s", $email);
+            $state->execute();
+            $result = $state->get_result();
             
             if($result->num_rows === 1) {
                 $user = $result->fetch_assoc();
@@ -77,10 +77,10 @@ class User {
 
     public function getById($id) {
         try {
-            $stmt = $this->conn->prepare("SELECT id, name, email, role FROM users WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            return $stmt->get_result()->fetch_assoc();
+            $state = $this->conn->prepare("SELECT id, name, email, role FROM users WHERE id = ?");
+            $state->bind_param("i", $id);
+            $state->execute();
+            return $state->get_result()->fetch_assoc();
         } catch (\Exception $e) {
             error_log("Error getting user: " . $e->getMessage());
             throw new \Exception("Error retrieving user data");
@@ -121,10 +121,10 @@ class User {
             $types .= "i";
 
             $sql = "UPDATE users SET " . implode(", ", $updates) . " WHERE id = ?";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->bind_param($types, ...$values);
+            $state = $this->conn->prepare($sql);
+            $state->bind_param($types, ...$values);
             
-            if($stmt->execute()) {
+            if($state->execute()) {
                 \CarDeals\Audit::log(
                     $this->conn, 
                     $data['user_id'], 
@@ -144,10 +144,10 @@ class User {
 
    public function delete($id, $userId) {
         $user = $this->getById($id);
-        $stmt = $this->conn->prepare("DELETE FROM users WHERE id = ?");
-        $stmt->bind_param("i", $id);
+        $state = $this->conn->prepare("DELETE FROM users WHERE id = ?");
+        $state->bind_param("i", $id);
         
-        if($stmt->execute()) {
+        if($state->execute()) {
             Audit::log($this->conn, $userId, 'delete', 'users', $id, "Deleted user {$user['name']} {$user['email']}");
             return true;
         }

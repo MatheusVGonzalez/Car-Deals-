@@ -31,16 +31,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($carD)) {
         $updateData = ['brand' => $carD['brand'], 'model' => $carD['model'], 'year' => $carD['year'], 'price' => $carD['price'], 'mileage' => $carD['mileage'], 'description' => $carD['description'], 'image' => $carD['image'], 'status' => 'Sold', 'user_id' => $_SESSION['user_id']];
         if ($car->update($carD['id'], $updateData)) {
             \CarDeals\Audit::log($conn, $_SESSION['user_id'], 'buy', 'cars', $carD['id'],
-                "User {$userData['name']} ({$userData['email']}) bought car {$carD['brand']} {$carD['model']} for {$carD['price']}"
+                "User {$userData['name']} ({$userData['email']}) bought {$carD['brand']} {$carD['model']} - {$carD['price']}"
             );
-            $message = "Purchased! You bought {$carD['brand']} {$carD['model']} for $ {$carD['price']}.";
+            $message = "Bought {$carD['brand']} {$carD['model']} for $ {$carD['price']}.";
             header("Location: list.php?success=1");
             exit;
         } else {
-            $message = "Error confirming purchase.";
+            $message = "error confirming purchase.";
         }
     } catch (Exception $e) {
-        $message = "Error: " . $e->getMessage();
+        $message = "error: " . $e->getMessage();
     }
 }
 ?>

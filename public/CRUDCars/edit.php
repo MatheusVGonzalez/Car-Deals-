@@ -21,7 +21,6 @@ if(isset($_GET['id'])) {
         exit;
     }
 }
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $imageFileName = $carData['image'];
@@ -36,27 +35,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        $updateData = [
-            'brand' => htmlspecialchars($_POST['brand']),
-            'model' => htmlspecialchars($_POST['model']),
-            'year' => (int)$_POST['year'],
-            'price' => (float)$_POST['price'],
-            'mileage' => (int)$_POST['mileage'],
-            'description' => htmlspecialchars($_POST['description']),
-            'image' => $imageFileName,
-            'status' => $_POST['status'],
-            'user_id' => $_SESSION['user_id']
-        ];
+        $updateData = ['brand' => htmlspecialchars($_POST['brand']), 'model' => htmlspecialchars($_POST['model']), 'year' => (int)$_POST['year'], 'price' => (float)$_POST['price'], 'mileage' => (int)$_POST['mileage'], 'description' => htmlspecialchars($_POST['description']), 'image' => $imageFileName, 'status' => $_POST['status'], 'user_id' => $_SESSION['user_id']];
 
         if ($car->update($_GET['id'], $updateData)) {
             header("Location: list.php");
             exit;
         } else {
-            throw new Exception("Error updating car record.");
+            throw new Exception("error updating car record.");
         }
 
     } catch (Exception $e) {
-        $message = "Error: " . $e->getMessage();
+        $message = "error: " . $e->getMessage();
     }
 }
 ?>

@@ -12,10 +12,10 @@ $db = new Database();
 $conn = $db->conn;
 
 $user_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
+$state = $conn->prepare("SELECT * FROM users WHERE id = ?");
+$state->bind_param("i", $user_id);
+$state->execute();
+$user = $state->get_result()->fetch_assoc();
 
 $cars_count = $conn->query("SELECT COUNT(*) as total FROM cars")->fetch_assoc()['total'];
 $users_count = $conn->query("SELECT COUNT(*) as total FROM users")->fetch_assoc()['total'];
