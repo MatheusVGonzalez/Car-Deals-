@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../classes/Database.php';
+require '../Config.php';
 $db = new Database();
 $conn = $db->conn;
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
@@ -9,15 +10,22 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $password = htmlspecialchars($_POST['password']);
     $role = htmlspecialchars('viewer');
 
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    $peppered_pass = hash_hmac("sha256", $password, PEPPER);
+    $hashedPassword = password_hash($peppered_pass, PASSWORD_BCRYPT, ['cost' => 11]);
 
-    $result = $conn->query("SELECT id FROM users WHERE email='$email'");
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email=?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
     if($result->num_rows > 0){
-        $error = "Email already exist";
+        $error = "Email already exists";
     }else{
-        $conn->query("INSERT INTO users (name, email, password, role) VALUES ('$name', '$email', '$hashedPassword', '$role')");
+        $insert = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
+        $insert->bind_param("ssss", $name, $email, $hashedPassword, $role);
+        $insert->execute();
 
-        $_SESSION['sucess'] = "user registred";
+        $_SESSION['success'] = "User registered successfully!";
         header("Location: login.php");
         exit;
     }

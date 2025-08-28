@@ -2,6 +2,8 @@
 session_start();
 include '../classes/Database.php';
 include '../classes/Audit.php';
+require '../Config.php';
+
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -22,6 +24,14 @@ $users_count = $conn->query("SELECT COUNT(*) as total FROM users")->fetch_assoc(
 
 $audit = new \CarDeals\Audit($conn);
 $recent_activities = $audit->getRecentActivity(5);  
+
+if (isset($_SESSION['LAST_ACTIVITY']) && time() - $_SESSION['LAST_ACTIVITY'] > 300) { 
+    session_unset();
+    session_destroy();
+    header("Location: login.php?error=Session expired");
+    exit;
+}
+$_SESSION['LAST_ACTIVITY'] = time();
 
 ?>
 

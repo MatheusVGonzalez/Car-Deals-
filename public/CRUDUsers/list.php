@@ -2,6 +2,8 @@
 session_start();
 include '../../classes/Database.php';
 include '../../classes/User.php';
+require '../../Config.php';
+
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../login.php');

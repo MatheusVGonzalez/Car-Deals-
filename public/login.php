@@ -1,6 +1,8 @@
 <?php
 session_start();
 include '../classes/Database.php';
+require '../Config.php';
+
 $db = new Database();
 $conn = $db->conn;
 $error = '';
@@ -8,21 +10,25 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $email = htmlspecialchars($_POST['email']);
     $password = $_POST['password'];
     
-    $result = $conn->query("SELECT * FROM users WHERE email='$email'");
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email=?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
     if($result->num_rows == 1){
         $user = $result->fetch_assoc();
-        if(password_verify($password, $user['password'])){
+        $peppered_pass = hash_hmac("sha256", $password, PEPPER);
+        if(password_verify($peppered_pass, $user['password'])){
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['role'] = $user['role'];
             header("Location: dashboard.php");
             exit;
-        
         }else{
-            $error = "Wrond password";
+            $error = "Wrong password";
         }
     }else{
-        $error = "User not founded";
+        $error = "User not found";
     }
 }
 

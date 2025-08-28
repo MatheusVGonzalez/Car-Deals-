@@ -3,6 +3,7 @@ session_start();
 include '../../classes/Database.php';
 include '../../classes/User.php';
 include '../../classes/Audit.php';
+require '../../Config.php'; 
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../login.php');
@@ -22,26 +23,39 @@ if ($currentUser['role'] !== 'admin') {
     header('Location: ../dashboard.php');
     exit;
 }
-
 $error = '';
-
-if($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $userData = [
-            'name' => htmlspecialchars($_POST['name']),
-            'email' => htmlspecialchars($_POST['email']),
-            'password' => $_POST['password'],
-            'role' => htmlspecialchars($_POST['role'])
-        ];
+        $name = htmlspecialchars($_POST['name']);
+        $email = htmlspecialchars($_POST['email']);
+        $password = $_POST['password'];
+        $role = htmlspecialchars($_POST['role']); 
 
-        if($user->create($userData)) {
-            header("Location: list.php");
+        $peppered_pass = hash_hmac("sha256", $password, PEPPER);
+        $hashedPassword = password_hash($peppered_pass, PASSWORD_BCRYPT, ['cost' => 11]);
+
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email=?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $error = "Email already exists";
+        } else {
+            $insert = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
+            $insert->bind_param("ssss", $name, $email, $hashedPassword, $role);
+            $insert->execute();
+
+            $_SESSION['success'] = "User registered successfully!";
+            header("Location: list.php"); 
             exit;
         }
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
 }
+
+
 ?>
 
 <!DOCTYPE html>

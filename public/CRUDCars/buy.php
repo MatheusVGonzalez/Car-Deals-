@@ -89,10 +89,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($carD)) {
                 <?php if($carD['image']): ?>
                     <img src="../uploads/<?= htmlspecialchars($carD['image']) ?>" alt="Car Image">
                 <?php endif; ?>
-                <p><strong>Car:</strong> <?= htmlspecialchars($carD['brand']) ?> <?= htmlspecialchars($carData['model']) ?></p>
-                <p><strong>Year:</strong> <?= htmlspecialchars($carData['year']) ?></p>
-                <p><strong>Price:</strong> $<?= number_format($carData['price'], 2) ?></p>
-                <p><strong>Status:</strong> <?= htmlspecialchars($carData['status']) ?></p>
+                <p><strong>Car:</strong> <?= htmlspecialchars($carD['brand']) ?> <?= htmlspecialchars($carD['model']) ?></p>
+                <p><strong>Year:</strong> <?= htmlspecialchars($carD['year']) ?></p>
+                <p><strong>Price:</strong> $<?= number_format($carD['price'], 2) ?></p>
+                <p><strong>Status:</strong> <?= htmlspecialchars($carD['status']) ?></p>
             </div>
             <form method="post">
                 <div class="form-group">
